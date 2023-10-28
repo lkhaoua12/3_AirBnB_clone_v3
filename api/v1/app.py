@@ -1,7 +1,5 @@
 #!/usr/bin/python3
-"""
-This module contains the principal application
-"""
+""" This module define the app entrypoint """
 from models import storage
 from api.v1.views import app_views
 from flask import Flask
@@ -9,7 +7,7 @@ from os import getenv
 
 app = Flask(__name__)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
-app.register_blueprint(app_views)
+app.register_blueprint(app_views, url_prefix='/api/v1')
 
 
 @app.teardown_appcontext
