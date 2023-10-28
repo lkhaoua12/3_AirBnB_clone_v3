@@ -2,7 +2,7 @@
 """ This module define the app entrypoint """
 from models import storage
 from api.v1.views import app_views
-from flask import Flask
+from flask import Flask, jsonify, make_response
 from os import getenv
 
 app = Flask(__name__)
@@ -14,6 +14,12 @@ app.register_blueprint(app_views, url_prefix='/api/v1')
 def teardown_db(obj):
     """ calls methods close() """
     storage.close()
+
+
+@app.errorhandler(404)
+def handle_errors(error):
+    """ handle all routing errors. """
+    return make_response(jsonify({"error": "Not found"}), 404)
 
 
 if __name__ == "__main__":
