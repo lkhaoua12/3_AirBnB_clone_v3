@@ -4,7 +4,7 @@ This module contains the principal application
 """
 from models import storage
 from api.v1.views import app_views
-from flask import Flask, make_response, jsonify
+from flask import Flask
 from os import getenv
 
 app = Flask(__name__)
@@ -13,22 +13,10 @@ app.register_blueprint(app_views)
 
 
 @app.teardown_appcontext
-def close_db(obj):
+def teardown_db(obj):
     """ calls methods close() """
     storage.close()
 
-
-@app.errorhandler(404)
-def page_not_foun(error):
-    """ Loads a custom 404 page not found """
-    return make_response(jsonify({"error": "Not found"}), 404)
-
-
-app.config['SWAGGER'] = {
-    'title': 'AirBnB clone - RESTful API',
-    'description': 'This is the api that was created for the hbnb restful api project,\
-    all the documentation will be shown below',
-    'uiversion': 3}
 
 if __name__ == "__main__":
 

@@ -1,16 +1,15 @@
 #!/usr/bin/python3
-"""
-This module contains endpoint(route) status
-"""
-from models import storage
-from flask import Flask
+""" This module contains endpoint(route) status """
+
 from api.v1.views import app_views
-from flask import jsonify
+from flask import jsonify, request
 
 
-@app_views.route('/status', strict_slashes=False)
+@app_views.route('/status', methods=['GET'], strict_slashes=False)
 def status():
-    """
-    Returns a JSON status
-    """
-    return jsonify({"status": "OK"})
+    """ Returns api status """
+    if request.method == 'GET':
+        response_message = {
+            "status": "OK"
+        }
+        return jsonify(response_message)
