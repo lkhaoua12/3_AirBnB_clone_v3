@@ -1,10 +1,16 @@
 #!/usr/bin/python3
-""" define the index page of the api """
+"""
+This module contains endpoint(route) status
+"""
+from models import storage
+from flask import Flask
 from api.v1.views import app_views
 from flask import jsonify
 
 
 @app_views.route('/status', strict_slashes=False)
 def status():
-    """ check status of the api. """
+    """
+    Returns a JSON status
+    """
     return jsonify({"status": "OK"})
