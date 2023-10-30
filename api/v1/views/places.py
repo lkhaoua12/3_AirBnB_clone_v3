@@ -1,124 +1,87 @@
 #!/usr/bin/python3
-""" places views endpoint """
-
-from api.v1.views import app_views
-from flask import abort, jsonify, make_response, request
+"""
+new view for User object that handles all default RESTFul API
+"""
 from models import storage
-from models.city import City
-from models.place import Place
 from models.user import User
 
 
-@app_views.route('/cities/<string:city_id>/places', methods=['GET'],
-                 strict_slashes=False)
-def get_places(city_id):
-    """get place information for all places in a specified city"""
-    city = storage.get("City", city_id)
-    if city is None:
+from flask import Flask, jsonify, abort, request
+from api.v1.views import app_views
+
+
+@app_views.route('/users', methods=['GET'], strict_slashes=False)
+def get_users():
+    """retrieve a list all users"""
+    all_users = []
+    users = storage.all("User").values()
+    for user in users:
+        all_users.append(user.to_dict())
+    return jsonify(all_users)
+
+
+@app_views.route('/users/<string:user_id>',
+                 methods=['GET'], strict_slashes=False)
+def get_user(user_id):
+    """retrieve a user"""
+    all_users = []
+    users = storage.all("User").values()
+    for user in users:
+        all_users.append(user.to_dict())
+    for u in all_users:
+        if u.get("id") == user_id:
+            return jsonify(u)
+    abort(404)
+
+
+@app_views.route('/users/<string:user_id>',
+                 methods=['DELETE'], strict_slashes=False)
+def delete_user(user_id):
+    """deletes a user"""
+    users = storage.all("User")
+    try:
+        key = 'User.' + user_id
+        storage.delete(users[key])
+        storage.save()
+        return jsonify({}), 200
+    except BaseException:
         abort(404)
-    places = []
-    for place in city.places:
-        places.append(place.to_dict())
-    return jsonify(places)
 
 
-@app_views.route('/places/<string:place_id>', methods=['GET'],
-                 strict_slashes=False)
-def get_place(place_id):
-    """get place information for specified place"""
-    place = storage.get("Place", place_id)
-    if place is None:
-        abort(404)
-    return jsonify(place.to_dict())
-
-
-@app_views.route('/places/<string:place_id>', methods=['DELETE'],
-                 strict_slashes=False)
-def delete_place(place_id):
-    """deletes a place based on its place_id"""
-    place = storage.get("Place", place_id)
-    if place is None:
-        abort(404)
-    place.delete()
-    storage.save()
-    return (jsonify({}))
-
-
-@app_views.route('/cities/<string:city_id>/places', methods=['POST'],
-                 strict_slashes=False)
-def post_place(city_id):
-    """create a new place"""
-    city = storage.get("City", city_id)
-    if city is None:
-        abort(404)
-    if not request.get_json():
-        return make_response(jsonify({'error': 'Not a JSON'}), 400)
-    kwargs = request.get_json()
-    if 'user_id' not in kwargs:
-        return make_response(jsonify({'error': 'Missing user_id'}), 400)
-    user = storage.get("User", kwargs['user_id'])
-    if user is None:
-        abort(404)
-    if 'name' not in kwargs:
-        return make_response(jsonify({'error': 'Missing name'}), 400)
-    kwargs['city_id'] = city_id
-    place = Place(**kwargs)
-    place.save()
-    return make_response(jsonify(place.to_dict()), 201)
-
-
-@app_views.route('/places/<string:place_id>', methods=['PUT'],
-                 strict_slashes=False)
-def put_place(place_id):
-    """update a place"""
-    place = storage.get("Place", place_id)
-    if place is None:
-        abort(404)
-    if not request.get_json():
-        return make_response(jsonify({'error': 'Not a JSON'}), 400)
-    for attr, val in request.get_json().items():
-        if attr not in ['id', 'user_id', 'city_id', 'created_at',
-                        'updated_at']:
-            setattr(place, attr, val)
-    place.save()
-    return jsonify(place.to_dict())
-
-
-@app_views.route('/places_search', methods=['POST'], strict_slashes=False)
-def post_places_search():
-    """searches for a place"""
-    if request.get_json() is not None:
-        params = request.get_json()
-        states = params.get('states', [])
-        cities = params.get('cities', [])
-        amenities = params.get('amenities', [])
-        amenity_objects = []
-        for amenity_id in amenities:
-            amenity = storage.get('Amenity', amenity_id)
-            if amenity:
-                amenity_objects.append(amenity)
-        if states == cities == []:
-            places = storage.all('Place').values()
-        else:
-            places = []
-            for state_id in states:
-                state = storage.get('State', state_id)
-                state_cities = state.cities
-                for city in state_cities:
-                    if city.id not in cities:
-                        cities.append(city.id)
-            for city_id in cities:
-                city = storage.get('City', city_id)
-                for place in city.places:
-                    places.append(place)
-        confirmed_places = []
-        for place in places:
-            place_amenities = place.amenities
-            confirmed_places.append(place.to_dict())
-            for amenity in amenity_objects:
-                if amenity not in place_amenities:
-                    confirmed_places.pop()
-                    break
-        return jsonify(confirmed_places)
+@app_views.route('/users', methods=['POST'], strict_slashes=False)
+def post_user():
+    """Create a User"""
+    if not request.is_json:
+        abort(400, 'Not a JSON')
     else:
-        return make_response(jsonify({'error': 'Not a JSON'}), 400)
+        request_body = request.get_json()
+    if 'email' not in request_body:
+        abort(400, 'Missing email')
+    elif 'password' not in request_body:
+        abort(400, 'Missing password')
+    else:
+        user = User(**request_body)
+        storage.new(user)
+        storage.save()
+        return jsonify(user.to_dict()), 201
+
+
+@app_views.route('/users/<string:user_id>',
+                 methods=['PUT'], strict_slashes=False)
+def put_user(user_id):
+    """Updates a User"""
+    users = storage.all(User)
+    key = 'User.' + user_id
+    try:
+        user = users[key]
+    except BaseException:
+        abort(404)
+    if request.is_json:
+        request_body = request.get_json()
+    else:
+        abort(400, 'Not a JSON')
+    for key, value in request_body.items():
+        if key != 'id' and key != 'created_at' and key != 'updated_at':
+            setattr(user, key, value)
+    storage.save()
+    return jsonify(user.to_dict()), 200
