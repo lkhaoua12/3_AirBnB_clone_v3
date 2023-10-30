@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """ create endpoint for states """
 from models import storage
-from flask import jsonify, make_response, abort, request
+from flask import jsonify, abort, request
 from models.state import State
 from api.v1.views import app_views
 
@@ -30,12 +30,12 @@ def get_state(id):
 def post_state():
     """ create a new state objects. """
     if not request.is_json:
-        return make_response(jsonify({'error': 'Not a JSON'}), 400)
+        return jsonify({'error': 'Not a JSON'}), 400
     else:
         body = request.get_json()
 
     if 'name' not in body:
-        return make_response(jsonify({'error': 'Missing name'}), 400)
+        return jsonify({'error': 'Missing name'}), 400
     else:
         state = State(**body)
         storage.save()
@@ -62,7 +62,7 @@ def put_state(state_id):
     if not state:
         abort(404)
     if not request.get_json():
-        return make_response(jsonify({'error': 'Not a JSON'}), 400)
+        return jsonify({'error': 'Not a JSON'}), 400
     for key, value in state.items():
         if key not in ['id', 'created_at', 'updated_at']:
             setattr(state, key, value)
