@@ -48,7 +48,8 @@ def post_user():
         return jsonify({'error': 'Missing email'}), 400
     if 'password' not in request.get_json():
         return jsonify({'error': 'Missing password'}), 400
-    user = User(**request.get_json())
+    body = request.get_json()
+    user = User(**body)
     user.save()
     return jsonify(user.to_dict()), 201
 
