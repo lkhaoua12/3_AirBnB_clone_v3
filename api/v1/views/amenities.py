@@ -2,7 +2,7 @@
 """ view endpoint for amenities """
 
 from api.v1.views import app_views
-from flask import abort, jsonify, make_response, request
+from flask import abort, jsonify, request
 from models import storage
 from models.amenity import Amenity
 
@@ -59,9 +59,9 @@ def put_amenity(amenity_id):
     if amenity is None:
         abort(404)
     if not request.get_json():
-        return make_response(jsonify({'error': 'Not a JSON'}), 400)
+        return jsonify({'error': 'Not a JSON'}), 400
     for key, value in request.get_json().items():
         if key not in ['id', 'created_at', 'updated_at']:
             setattr(amenity, key, value)
     amenity.save()
-    return jsonify(amenity.to_dict())
+    return jsonify(amenity.to_dict()), 200
