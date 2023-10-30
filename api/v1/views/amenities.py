@@ -11,7 +11,7 @@ from models.amenity import Amenity
                  strict_slashes=False)
 def get_amenities():
     """ get all amenities information """
-    amenities = storage.all("Amenity").values()
+    amenities = storage.all(Amenity).values()
     amenities_json = [amenity.to_dict() for amenity in amenities]
     return jsonify(amenities_json)
 
@@ -20,7 +20,7 @@ def get_amenities():
                  strict_slashes=False)
 def get_amenity(amenity_id):
     """ get a specific amenity info by id """
-    amenity = storage.get("Amenity", amenity_id)
+    amenity = storage.get(Amenity, amenity_id)
     if amenity is None:
         abort(404)
     return jsonify(amenity.to_dict())
@@ -30,12 +30,12 @@ def get_amenity(amenity_id):
                  strict_slashes=False)
 def delete_amenity(amenity_id):
     """ deletes an amenity based on its id """
-    amenity = storage.get("Amenity", amenity_id)
+    amenity = storage.get(Amenity, amenity_id)
     if amenity is None:
         abort(404)
     amenity.delete()
     storage.save()
-    return (jsonify({}))
+    return jsonify({})
 
 
 @app_views.route('/amenities', methods=['POST'],
@@ -43,12 +43,12 @@ def delete_amenity(amenity_id):
 def post_amenity():
     """create a new amenity"""
     if not request.get_json():
-        return make_response(jsonify({'error': 'Not a JSON'}), 400)
+        return jsonify({'error': 'Not a JSON'}), 400
     if 'name' not in request.get_json():
-        return make_response(jsonify({'error': 'Missing name'}), 400)
+        return jsonify({'error': 'Missing name'}), 400
     amenity = Amenity(**request.get_json())
     amenity.save()
-    return make_response(jsonify(amenity.to_dict()), 201)
+    return jsonify(amenity.to_dict()), 201
 
 
 @app_views.route('/amenities/<string:amenity_id>', methods=['PUT'],
